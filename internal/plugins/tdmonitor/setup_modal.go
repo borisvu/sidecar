@@ -137,8 +137,8 @@ func (m *SetupModel) performSetup() tea.Cmd {
 		}
 
 		if m.installInstructions {
-			agentFile := preferredAgentFile(m.baseDir)
-			if !hasTDInstructions(agentFile) {
+			if !anyFileHasTDInstructions(m.baseDir) {
+				agentFile := resolveAgentFile(m.baseDir)
 				_ = installInstructions(agentFile)
 			}
 		}
@@ -171,29 +171,6 @@ const instructionText = `## MANDATORY: Use td for Task Management
 You must run td usage --new-session at conversation start (or after /clear) to see current work.
 Use td usage -q for subsequent reads.
 `
-
-// preferredAgentFile returns the best agent file to use for installation.
-func preferredAgentFile(baseDir string) string {
-	agentsPath := filepath.Join(baseDir, "AGENTS.md")
-	claudePath := filepath.Join(baseDir, "CLAUDE.md")
-
-	if fileExists(agentsPath) {
-		return agentsPath
-	}
-	if fileExists(claudePath) {
-		return claudePath
-	}
-	return agentsPath
-}
-
-// hasTDInstructions checks if the file already contains td instructions.
-func hasTDInstructions(path string) bool {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return false
-	}
-	return strings.Contains(string(content), "td usage")
-}
 
 // installInstructions adds td instructions to an agent file.
 func installInstructions(path string) error {
@@ -244,13 +221,4 @@ func prependToFile(path string, text string) error {
 	newContent.WriteString(contentStr[insertPos:])
 
 	return os.WriteFile(path, []byte(newContent.String()), 0644)
-}
-
-// fileExists returns true if the path exists and is a file.
-func fileExists(path string) bool {
-	info, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return !info.IsDir()
 }
