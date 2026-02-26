@@ -41,7 +41,7 @@ func NewSetupModel(baseDir string) *SetupModel {
 		baseDir:             baseDir,
 		mouseHandler:        mouse.NewHandler(),
 		initDB:              true,
-		installInstructions: true,
+		installInstructions: !anyFileHasTDInstructions(baseDir),
 	}
 	m.buildModal()
 	return m
